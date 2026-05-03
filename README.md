@@ -1,3 +1,8 @@
+Nama: Maulida Rahmayanti
+NIM: 11231038
+link report:
+link Video: 
+
 # Distributed Synchronization System
 
 Sistem ini adalah implementasi dari sistem sinkronisasi terdistribusi yang dirancang untuk mensimulasikan lingkungan *real-world* dari *distributed systems*. Sistem ini mendukung banyak *node* yang dapat saling berkomunikasi dan mensinkronisasikan data secara konsisten.
