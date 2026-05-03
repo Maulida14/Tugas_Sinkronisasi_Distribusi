@@ -1,7 +1,7 @@
-Nama: Maulida Rahmayanti
-NIM: 11231038
-link report:
-link Video: 
+### Nama: Maulida Rahmayanti
+### NIM: 11231038
+### link report: https://drive.google.com/file/d/1RAPfEreGaaQeRFjPozWhw3nrzYQhyyOk/view?usp=sharing
+### link Video: 
 
 # Distributed Synchronization System
 
