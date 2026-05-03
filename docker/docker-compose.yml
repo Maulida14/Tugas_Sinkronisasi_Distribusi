@@ -1,0 +1,102 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - distributed_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  node_1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      NODE_ID: node_1
+      NODE_PORT: 8001
+      CLUSTER_PEERS: node_2:8002,node_3:8003,node_4:8004
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+    ports:
+      - "8001:8001"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - distributed_network
+    container_name: node_1
+
+  node_2:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      NODE_ID: node_2
+      NODE_PORT: 8002
+      CLUSTER_PEERS: node_1:8001,node_3:8003,node_4:8004
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+    ports:
+      - "8002:8002"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - distributed_network
+    container_name: node_2
+
+  node_3:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      NODE_ID: node_3
+      NODE_PORT: 8003
+      CLUSTER_PEERS: node_1:8001,node_2:8002,node_4:8004
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+    ports:
+      - "8003:8003"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - distributed_network
+    container_name: node_3
+
+  node_4:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      NODE_ID: node_4
+      NODE_PORT: 8004
+      CLUSTER_PEERS: node_1:8001,node_2:8002,node_3:8003
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+    ports:
+      - "8004:8004"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - distributed_network
+    container_name: node_4
+
+volumes:
+  redis_data:
+
+networks:
+  distributed_network:
+    driver: bridge

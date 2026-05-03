@@ -1,0 +1,540 @@
+openapi: 3.0.3
+info:
+  title: Distributed Synchronization System API
+  version: 1.0.0
+  description: API specification for the distributed lock, queue, cache, metrics, and Raft RPC services.
+servers:
+  - url: http://localhost:8001
+    description: Local node 1
+tags:
+  - name: Health
+  - name: Lock
+  - name: Queue
+  - name: Cache
+  - name: Metrics
+  - name: Raft
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /readyz:
+    get:
+      tags: [Health]
+      summary: Leader readiness check
+      responses:
+        '200':
+          description: Readiness response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+  /status:
+    get:
+      tags: [Health]
+      summary: Node status
+      responses:
+        '200':
+          description: Node status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeStatusResponse'
+  /lock/acquire:
+    post:
+      tags: [Lock]
+      summary: Acquire a distributed lock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LockAcquireRequest'
+      responses:
+        '200':
+          description: Lock acquired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockAcquireResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /lock/release:
+    post:
+      tags: [Lock]
+      summary: Release a distributed lock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LockReleaseRequest'
+      responses:
+        '200':
+          description: Lock release result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /lock/status/{resource}:
+    get:
+      tags: [Lock]
+      summary: Get lock status by resource
+      parameters:
+        - in: path
+          name: resource
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lock list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockStatusResponse'
+  /queue/publish:
+    post:
+      tags: [Queue]
+      summary: Publish a message to the distributed queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueuePublishRequest'
+      responses:
+        '200':
+          description: Message published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueuePublishResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /queue/consume:
+    post:
+      tags: [Queue]
+      summary: Consume messages from the queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueueConsumeRequest'
+      responses:
+        '200':
+          description: Queue messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueConsumeResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /queue/ack:
+    post:
+      tags: [Queue]
+      summary: Acknowledge a queue message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueueAckRequest'
+      responses:
+        '200':
+          description: Ack result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /cache/get/{key}:
+    get:
+      tags: [Cache]
+      summary: Read a cache value
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cache hit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheGetResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /cache/put:
+    post:
+      tags: [Cache]
+      summary: Write a cache value
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CachePutRequest'
+      responses:
+        '200':
+          description: Cache write result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /cache/invalidate/{key}:
+    post:
+      tags: [Cache]
+      summary: Invalidate a cache key
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invalidation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /cache/clear:
+    post:
+      tags: [Cache]
+      summary: Clear the local cache
+      responses:
+        '200':
+          description: Cache cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /metrics:
+    get:
+      tags: [Metrics]
+      summary: Get aggregated node metrics
+      responses:
+        '200':
+          description: Metrics response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+  /raft/info:
+    get:
+      tags: [Raft]
+      summary: Get Raft node state
+      responses:
+        '200':
+          description: Raft state info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaftInfoResponse'
+  /raft/message:
+    post:
+      tags: [Raft]
+      summary: Internal Raft RPC endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaftMessage'
+      responses:
+        '200':
+          description: Raft RPC response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaftMessage'
+components:
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        node_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    ReadyResponse:
+      type: object
+      properties:
+        ready:
+          type: boolean
+        node_id:
+          type: string
+        is_leader:
+          type: boolean
+    NodeStatusResponse:
+      type: object
+      properties:
+        node_id:
+          type: string
+        raft_state:
+          type: string
+        raft_term:
+          type: integer
+        leader:
+          type: string
+          nullable: true
+        log_size:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+    LockAcquireRequest:
+      type: object
+      required: [resource, client_id]
+      properties:
+        resource:
+          type: string
+        lock_type:
+          type: string
+          enum: [shared, exclusive]
+        client_id:
+          type: string
+        timeout:
+          type: number
+    LockAcquireResponse:
+      type: object
+      properties:
+        lock_id:
+          type: string
+        resource:
+          type: string
+        lock_type:
+          type: string
+        status:
+          type: string
+    LockReleaseRequest:
+      type: object
+      required: [lock_id]
+      properties:
+        lock_id:
+          type: string
+    LockStatusResponse:
+      type: object
+      properties:
+        resource:
+          type: string
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              lock_id:
+                type: string
+              owner:
+                type: string
+              lock_type:
+                type: string
+              acquired_at:
+                type: string
+                format: date-time
+    QueuePublishRequest:
+      type: object
+      required: [topic]
+      properties:
+        topic:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+          nullable: true
+    QueuePublishResponse:
+      type: object
+      properties:
+        msg_id:
+          type: string
+        topic:
+          type: string
+        status:
+          type: string
+    QueueConsumeRequest:
+      type: object
+      required: [topic, consumer_id]
+      properties:
+        topic:
+          type: string
+        consumer_id:
+          type: string
+        batch_size:
+          type: integer
+          minimum: 1
+    QueueConsumeResponse:
+      type: object
+      properties:
+        topic:
+          type: string
+        consumer_id:
+          type: string
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              msg_id:
+                type: string
+              payload:
+                oneOf:
+                  - type: object
+                    additionalProperties: true
+                  - type: string
+                  - type: number
+                  - type: boolean
+                  - type: array
+                    items: {}
+                  - type: 'null'
+              delivery_count:
+                type: integer
+    QueueAckRequest:
+      type: object
+      required: [msg_id, consumer_id]
+      properties:
+        msg_id:
+          type: string
+        consumer_id:
+          type: string
+    CacheGetResponse:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          nullable: true
+    CachePutRequest:
+      type: object
+      required: [key]
+      properties:
+        key:
+          type: string
+        value:
+          nullable: true
+        ttl:
+          type: number
+          nullable: true
+    StatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        key:
+          type: string
+          nullable: true
+        msg_id:
+          type: string
+          nullable: true
+        lock_id:
+          type: string
+          nullable: true
+    MetricsResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        node_id:
+          type: string
+        raft:
+          type: object
+          additionalProperties: true
+        locks:
+          type: object
+          additionalProperties: true
+        queue:
+          type: object
+          additionalProperties: true
+        cache:
+          type: object
+          additionalProperties: true
+    RaftInfoResponse:
+      type: object
+      properties:
+        node_id:
+          type: string
+        current_term:
+          type: integer
+        state:
+          type: string
+        leader_id:
+          type: string
+          nullable: true
+        log_size:
+          type: integer
+        commit_index:
+          type: integer
+        last_applied:
+          type: integer
+        voted_for:
+          type: string
+          nullable: true
+        peers:
+          type: array
+          items:
+            type: string
+        peers_connected:
+          type: object
+          additionalProperties:
+            type: boolean
+    RaftMessage:
+      type: object
+      required: [message_type, sender_id, term, data]
+      properties:
+        message_type:
+          type: string
+          enum: [request_vote, vote_response, append_entries, append_response]
+        sender_id:
+          type: string
+        term:
+          type: integer
+        data:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
